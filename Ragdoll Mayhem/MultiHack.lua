@@ -32,12 +32,9 @@ getgenv().Config = {
     Rainbow = false,
 
     -- Aimbot and Silent Aim
+    SilentAim = true,
     Aimbot = false,
     Sensitivity = 0.5,
-
-    SilentAim = true,
-
-    TeamCheck = false,
     FieldOfView = 100,
     AimHitbox = "Head"
 }
@@ -71,11 +68,6 @@ local AimbotToggle = Section1:CreateToggle("Aimbot", nil, function(State)
     Config.Aimbot = State
 end)
 AimbotToggle:SetState(Config.Aimbot)
-
-local TeamCheckToggle = Section1:CreateToggle("Team Check", nil, function(State)
-    Config.TeamCheck = State
-end)
-TeamCheckToggle:SetState(Config.TeamCheck)
 
 local SensitivitySlider = Section1:CreateSlider("Aimbot Sensitivity", 0,1,nil,false, function(Value)
     Config.Sensitivity = Value
@@ -220,17 +212,6 @@ local Slider4 = Section5:CreateSlider("Tile Scale",0,1,0.5,false, function(Value
     Window:SetTileScale(Value)
 end)
 
-local function TeamCheck(Target)
-    if Config.TeamCheck then
-        if LocalPlayer.Team ~= Target.Team then
-            return true
-        else
-            return false
-        end
-    end
-    return true
-end
-
 local function GetCorners(Model)
     local CFrame, Size = Model:GetBoundingBox()
     local CornerTable = {
@@ -372,18 +353,29 @@ local function CreateESP(Model)
     end)
 end
 
+local function TeamCheck(Player)
+    if Player.Character and Player.Character:FindFirstChild("Team") then
+        if Player.Character.Team.Value ~= LocalPlayer.Character.Team.Value or Player.Character.Team.Value == "None" then
+            print("in team")
+            return true
+        else
+            print("not in team")
+            return false
+        end
+    end
+    return true
+end
+
 local function GetTarget()
     local Camera = Workspace.CurrentCamera
     for _, Player in pairs(PlayerService:GetPlayers()) do
-        if Player ~= LocalPlayer and TeamCheck(Player) then
-            if Player.Character and Player.Character:FindFirstChild(Config.AimHitbox) then
-                if Player.Character:FindFirstChildOfClass("Humanoid") and Player.Character:FindFirstChildOfClass("Humanoid").Health ~= 0 then
-                    local Vector, OnScreen = Camera:WorldToViewportPoint(Player.Character:FindFirstChild(Config.AimHitbox).Position)
-                    if OnScreen then
-                        local VectorMagnitude = (Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y) - Vector2.new(Vector.X, Vector.Y)).Magnitude
-                        if VectorMagnitude <= Config.FieldOfView then
-                            return Player.Character:FindFirstChild(Config.AimHitbox)
-                        end
+        if Player ~= LocalPlayer and Player.Character and Player.Character:FindFirstChild(Config.AimHitbox) and TeamCheck(Player) then
+            if Player.Character:FindFirstChildOfClass("Humanoid") and Player.Character:FindFirstChildOfClass("Humanoid").Health ~= 0 then
+                local Vector, OnScreen = Camera:WorldToViewportPoint(Player.Character:FindFirstChild(Config.AimHitbox).Position)
+                if OnScreen then
+                    local VectorMagnitude = (Vector2.new(Vector.X, Vector.Y) - UserInputService:GetMouseLocation()).Magnitude
+                    if VectorMagnitude <= Config.FieldOfView then
+                        return Player.Character:FindFirstChild(Config.AimHitbox)
                     end
                 end
             end
@@ -411,7 +403,18 @@ namecall = hookmetamethod(game, "__namecall", function(self, ...)
     return namecall(self, unpack(args))
 end)
 
+local Circle = Drawing.new("Circle")
 RunService.RenderStepped:Connect(function()
+    Circle.Visible = Config.CircleVisible
+    Circle.Transparency = Config.CircleTransparency
+    Circle.Color = Config.CircleColor
+
+    Circle.Thickness = Config.CircleThickness
+    Circle.NumSides = Config.CircleNumSides
+    Circle.Radius = Config.FieldOfView
+    Circle.Filled = Config.CircleFilled
+    Circle.Position = UserInputService:GetMouseLocation()
+
     if Config.SilentAim then
         hit = GetTarget()
     else
@@ -428,22 +431,7 @@ RunService.RenderStepped:Connect(function()
             end
         end
     end
-end)
 
-local Circle = Drawing.new("Circle")
-RunService.Heartbeat:Connect(function()
-    Circle.Visible = Config.CircleVisible
-    Circle.Transparency = Config.CircleTransparency
-    Circle.Color = Config.CircleColor
-
-    Circle.Thickness = Config.CircleThickness
-    Circle.NumSides = Config.CircleNumSides
-    Circle.Radius = Config.FieldOfView
-    Circle.Filled = Config.CircleFilled
-    Circle.Position = Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y)
-end)
-
-RunService.RenderStepped:Connect(function()
     if Config.Rainbow then
         local Hue, Saturation, Value = Config.Color:ToHSV()
         if Hue == 1 then
@@ -460,19 +448,16 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
-for _, Player in pairs(PlayerService:GetPlayers()) do
-    if Player.Name ~= LocalPlayer.Name then
-        CreateESP(Player.Character)
-        Player.CharacterAdded:Connect(function(Character)
-            CreateESP(Character)
-        end)
-    end
+for Index, Player in pairs(PlayerService:GetPlayers()) do
+    if Player == LocalPlayer then continue end
+    CreateESP(Player.Character)
+    Player.CharacterAdded:Connect(function(Character)
+        CreateESP(Character)
+    end)
 end
 
 PlayerService.PlayerAdded:Connect(function(Player)
-    if Player.Name ~= LocalPlayer.Name then
-        Player.CharacterAdded:Connect(function(Character)
-            CreateESP(Character)
-        end)
-    end
+    Player.CharacterAdded:Connect(function(Character)
+        CreateESP(Character)
+    end)
 end)
