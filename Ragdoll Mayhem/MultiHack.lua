@@ -6,7 +6,7 @@ local Workspace = game:GetService("Workspace")
 local PlayerService = game:GetService("Players")
 local LocalPlayer = PlayerService.LocalPlayer
 
-if not Workspace:FindFirstChild("Projectiles") or not Workspace:FindFirstChild("Drops") or not Workspace:FindFirstChild("WaterCollisionPart") then
+if Workspace:FindFirstChild("Drops") or not Workspace:FindFirstChild("Projectiles") or not Workspace:FindFirstChild("WaterCollisionPart") then
     warn("cant find required folders")
     return
 end
@@ -79,7 +79,7 @@ local FOVSlider = Section1:CreateSlider("Field Of View", 0,500,nil,true, functio
 end)
 FOVSlider:SetValue(Config.FieldOfView)
 
-local AimHitboxDropdown = Section1:CreateDropdown("Aim Part", {"Head","Torso"}, function(String)
+local AimHitboxDropdown = Section1:CreateDropdown("Aim Hitbox", {"Head","Torso"}, function(String)
     if String == "Head" then
         Config.AimHitbox = "Head"
     elseif String == "Torso" then
@@ -87,7 +87,7 @@ local AimHitboxDropdown = Section1:CreateDropdown("Aim Part", {"Head","Torso"}, 
     end
 end, Config.AimHitbox)
 
-local CircleToggle = Section2:CreateToggle("Circle Visible", nil, function(State)
+local CircleToggle = Section2:CreateToggle("Circle Enabled", nil, function(State)
     Config.CircleVisible = State
 end)
 CircleToggle:SetState(Config.CircleVisible)
@@ -122,11 +122,10 @@ local CircleRainbowToggle = Section2:CreateToggle("Circle Rainbow", nil, functio
 end)
 CircleRainbowToggle:SetState(Config.CircleRainbow)
 
-
-local ESPOutlineToggle = Section3:CreateToggle("ESP Outline", nil, function(State)
-    Config.OutlineVisible = State
+local ESPBoxToggle = Section3:CreateToggle("Box Visible", nil, function(State)
+    Config.BoxVisible = State
 end)
-ESPOutlineToggle:SetState(Config.OutlineVisible)
+ESPBoxToggle:SetState(Config.BoxVisible)
 
 local ESPTextToggle = Section3:CreateToggle("Text Visible", nil, function(State)
     Config.TextVisible = State
@@ -138,10 +137,10 @@ local ESPHealthToggle = Section3:CreateToggle("Healthbar Visible", nil, function
 end)
 ESPHealthToggle:SetState(Config.HealthbarVisible)
 
-local ESPBoxToggle = Section3:CreateToggle("Box Visible", nil, function(State)
-    Config.BoxVisible = State
+local ESPOutlineToggle = Section3:CreateToggle("ESP Outline", nil, function(State)
+    Config.OutlineVisible = State
 end)
-ESPBoxToggle:SetState(Config.BoxVisible)
+ESPOutlineToggle:SetState(Config.OutlineVisible)
 
 local ESPColorpicker = Section3:CreateColorpicker("ESP Color", function(Color)
     Config.Color = Color
@@ -381,10 +380,28 @@ local function GetTarget()
     end
 end
 
+local function GetTargetDummyDebug()
+    local Camera = Workspace.CurrentCamera
+    for _, Player in pairs(Workspace.LiveDuders:GetChildren()) do
+        if Player.Name ~= LocalPlayer.Name and Player:FindFirstChild(Config.AimHitbox) then
+            if Player:FindFirstChildOfClass("Humanoid") and Player:FindFirstChildOfClass("Humanoid").Health ~= 0 then
+                local Vector, OnScreen = Camera:WorldToViewportPoint(Player:FindFirstChild(Config.AimHitbox).Position)
+                if OnScreen then
+                    local VectorMagnitude = (Vector2.new(Vector.X, Vector.Y) - UserInputService:GetMouseLocation()).Magnitude
+                    if VectorMagnitude <= Config.FieldOfView then
+                        return Player:FindFirstChild(Config.AimHitbox)
+                    end
+                end
+            end
+        end
+    end
+end
+
 local function returnHit(hit, args)
     local Camera = Workspace.CurrentCamera
     local CameraPosition = Camera.CFrame.Position
-    if table.find(args[2],LocalPlayer.Character,1) and table.find(args[2],Workspace.Drops,2) and table.find(args[2],Workspace.Projectiles,4) and table.find(args[2],Workspace.WaterCollisionPart,5) then
+    --if table.find(args[2],Workspace.Projectiles,4) and table.find(args[2],Workspace.WaterCollisionPart,5) then
+    if table.find(args[2],Workspace.Drops,4) and table.find(args[2],Workspace.Projectiles,5) then
         args[1] = Ray.new(CameraPosition, hit.Position - CameraPosition)
         return
     end
@@ -423,6 +440,7 @@ RunService.RenderStepped:Connect(function()
         if UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
             local Target = GetTarget()
             if Target then
+                local Camera = Workspace.CurrentCamera
                 local Mouse = UserInputService:GetMouseLocation()
                 local TargetPos = Camera:WorldToViewportPoint(Target.Position)
                 mousemoverel((TargetPos.X - Mouse.X) * Config.Sensitivity, (TargetPos.Y - Mouse.Y) * Config.Sensitivity)
