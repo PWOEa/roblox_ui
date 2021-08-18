@@ -6,7 +6,7 @@ local Workspace = game:GetService("Workspace")
 local PlayerService = game:GetService("Players")
 local LocalPlayer = PlayerService.LocalPlayer
 
-if not Workspace:FindFirstChild("Projectiles") or not Workspace:FindFirstChild("Drops") or not Workspace:FindFirstChild("WaterColPart") then
+if not Workspace:FindFirstChild("Projectiles") or not Workspace:FindFirstChild("Drops") or not Workspace:FindFirstChild("WaterCollisionPart") then
     warn("cant find required folders")
     return
 end
@@ -356,10 +356,8 @@ end
 local function TeamCheck(Player)
     if Player.Character and Player.Character:FindFirstChild("Team") then
         if Player.Character.Team.Value ~= LocalPlayer.Character.Team.Value or Player.Character.Team.Value == "None" then
-            print("in team")
             return true
         else
-            print("not in team")
             return false
         end
     end
@@ -386,7 +384,7 @@ end
 local function returnHit(hit, args)
     local Camera = Workspace.CurrentCamera
     local CameraPosition = Camera.CFrame.Position
-    if table.find(args[2],LocalPlayer.Character,1) and table.find(args[2],Workspace.Drops,2) and table.find(args[2],Workspace.Projectiles,4) and table.find(args[2],Workspace.WaterColPart,5) then
+    if table.find(args[2],LocalPlayer.Character,1) and table.find(args[2],Workspace.Drops,2) and table.find(args[2],Workspace.Projectiles,4) and table.find(args[2],Workspace.WaterCollisionPart,5) then
         args[1] = Ray.new(CameraPosition, hit.Position - CameraPosition)
         return
     end
