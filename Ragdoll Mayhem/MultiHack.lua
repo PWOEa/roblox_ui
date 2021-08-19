@@ -6,7 +6,7 @@ local Workspace = game:GetService("Workspace")
 local PlayerService = game:GetService("Players")
 local LocalPlayer = PlayerService.LocalPlayer
 
-if Workspace:FindFirstChild("Drops") or not Workspace:FindFirstChild("Projectiles") or not Workspace:FindFirstChild("WaterCollisionPart") then
+if not Workspace:FindFirstChild("Drops") or not Workspace:FindFirstChild("Projectiles") or not Workspace:FindFirstChild("WaterCollisionPart") then
     warn("cant find required folders")
     return
 end
