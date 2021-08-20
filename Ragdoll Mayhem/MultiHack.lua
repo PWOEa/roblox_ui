@@ -400,8 +400,7 @@ end
 local function returnHit(hit, args)
     local Camera = Workspace.CurrentCamera
     local CameraPosition = Camera.CFrame.Position
-    --if table.find(args[2],Workspace.Projectiles,4) and table.find(args[2],Workspace.WaterCollisionPart,5) then
-    if table.find(args[2],Workspace.Drops,4) and table.find(args[2],Workspace.Projectiles,5) then
+    if table.find(args[2],LocalPlayer,1) and table.find(args[2],Workspace.Drops,4) and table.find(args[2],Workspace.Projectiles,5) then
         args[1] = Ray.new(CameraPosition, hit.Position - CameraPosition)
         return
     end
