@@ -48,8 +48,11 @@ function Library:CreateWindow(Config, Parent)
 	local Topbar = Main.Topbar
 	local TContainer = Holder.TContainer
 	local TBContainer = Holder.TBContainer.Holder
-
-	syn.protect_gui(Screen)
+	-- idk probably fix for exploits that dont have this function
+	if syn and syn.protect_gui then
+		syn.protect_gui(Screen)
+	end
+	
 	Screen.Name =  HttpService:GenerateGUID(false)
 	Screen.Parent = Parent
 	Topbar.WindowName.Text = Config.WindowName
