@@ -56,36 +56,21 @@ local FoVSlider = AimbotSection:CreateSlider("Field Of View", 0,1000,nil,true, f
 end)
 FoVSlider:SetValue(Config.FieldOfView)
 
-local TargetDropdown = AimbotSection:CreateDropdown("Target")
+local TargetDropdown = AimbotSection:CreateDropdown("Target", {"NPC","Player"}, function(String)
+	if String == "NPC" then
+		Config.TargetMode = "NPC"
+	elseif String == "Player" then
+		Config.TargetMode = "Player"
+	end
+end, Config.TargetMode)
 
-local NPCOption = TargetDropdown:AddOption("NPC", function(String)
-	Config.TargetMode = "NPC"
-end)
-
-local PlayerOption = TargetDropdown:AddOption("Player", function(String)
-	Config.TargetMode = "Player"
-end)
-
-if Config.TargetMode == "NPC" then
-	NPCOption:SetOption()
-else
-	PlayerOption:SetOption()
-end
-
-local AimHitboxDropdown = AimbotSection:CreateDropdown("Aim Hitbox")
-local HeadOption = AimHitboxDropdown:AddOption("Head", function(String)
-	Config.AimHitbox = "Head"
-end)
-local TorsoOption = AimHitboxDropdown:AddOption("Torso", function(String)
-	Config.AimHitbox = "Torso"
-end)
-
-if Config.AimHitbox == "Head" then
-	HeadOption:SetOption()
-else
-	TorsoOption:SetOption()
-end
-
+local AimHitboxDropdown = AimbotSection:CreateDropdown("Aim Hitbox", {"Head","Torso"}, function(String)
+    if String == "Head" then
+        Config.AimHitbox = "Head"
+    elseif String == "Torso" then
+        Config.AimHitbox = "Torso"
+    end
+end, Config.AimHitbox)
 
 local CircleVisibleToggle = CircleSection:CreateToggle("Enable Circle", nil, function(State)
 	Config.CircleVisible = State
@@ -132,29 +117,23 @@ end)
 UIColor:UpdateColor(UIConfig.Color)
 
 -- credits to jan for patterns
-local PatternDropdown = BackgroundSection:CreateDropdown("Image")
-local DefaultPattern = PatternDropdown:AddOption("Default", function(String)
-	Window:SetBackground("2151741365")
-end)
-local HeartsPattern = PatternDropdown:AddOption("Hearts", function(String)
-	Window:SetBackground("6073763717")
-end)
-local AbstractPattern = PatternDropdown:AddOption("Abstract", function(String)
-	Window:SetBackground("6073743871")
-end)
-local HexagonPattern = PatternDropdown:AddOption("Hexagon", function(String)
-	Window:SetBackground("6073628839")
-end)
-local CirclesPattern = PatternDropdown:AddOption("Circles", function(String)
-	Window:SetBackground("6071579801")
-end)
-local LacePattern = PatternDropdown:AddOption("Lace With Flowers", function(String)
-	Window:SetBackground("6071575925")
-end)
-local FloralPattern = PatternDropdown:AddOption("Floral", function(String)
-	Window:SetBackground("5553946656")
-end)
-DefaultPattern:SetOption()
+local PatternBackground = BackgroundSection:CreateDropdown("Image", {"Default","Hearts","Abstract","Hexagon","Circles","Lace With Flowers","Floral"}, function(Name)
+	if Name == "Default" then
+		Window:SetBackground("2151741365")
+	elseif Name == "Hearts" then
+		Window:SetBackground("6073763717")
+	elseif Name == "Abstract" then
+		Window:SetBackground("6073743871")
+	elseif Name == "Hexagon" then
+		Window:SetBackground("6073628839")
+	elseif Name == "Circles" then
+		Window:SetBackground("6071579801")
+	elseif Name == "Lace With Flowers" then
+		Window:SetBackground("6071575925")
+	elseif Name == "Floral" then
+		Window:SetBackground("5553946656")
+	end
+end, "Default")
 
 local BackgroundColorpicker = BackgroundSection:CreateColorpicker("Color", function(Color)
 	Window:SetBackgroundColor(Color)
@@ -224,8 +203,7 @@ local function returnHit(hit, args)
 	local Camera = Workspace.CurrentCamera
 	local CameraPosition = Camera.CFrame.Position
 	if args[1].Origin == CameraPosition then
-		--args[1] = Ray.new(args[1].Origin, (hit.Position + Vector3.new(0, (CameraPosition - hit.Position).Magnitude / 500, 0) - CameraPosition).Unit * 500)
-		args[1] = Ray.new(CameraPosition, (hit.Position - CameraPosition))
+		args[1] = Ray.new(CameraPosition, hit.Position - CameraPosition)
 		return
 	end
 end
@@ -241,19 +219,9 @@ namecall = hookmetamethod(game, "__namecall", function(self, ...)
     return namecall(self, unpack(args))
 end)
 
-RunService.Heartbeat:Connect(function()
-	print(GetTarget())
-	if Config.SilentAim then
-		hit = GetTarget()
-	else
-		hit = nil
-	end
-end)
-
--- circle
 local Circle = Drawing.new("Circle")
 RunService.Heartbeat:Connect(function()
-    Circle.Visible = Config.CircleVisible
+	Circle.Visible = Config.CircleVisible
     Circle.Transparency = Config.CircleTransparency
     Circle.Color = Config.CircleColor
 
@@ -261,5 +229,11 @@ RunService.Heartbeat:Connect(function()
     Circle.NumSides = Config.CircleNumSides
     Circle.Radius = Config.FieldOfView
     Circle.Filled = Config.CircleFilled
-    Circle.Position = Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y)
+    Circle.Position = UserInputService:GetMouseLocation()
+
+	if Config.SilentAim then
+		hit = GetTarget()
+	else
+		hit = nil
+	end
 end)
