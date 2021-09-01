@@ -20,7 +20,8 @@ getgenv().Config = {
 	TeamCheck = false,
 	FieldOfView = 100,
 	TargetMode = "NPC",
-	AimHitbox = "Head"
+	AimHitbox = "Head",
+	Wallcheck = false
 }
 end
 
@@ -50,6 +51,11 @@ local TeamCheckToggle = AimbotSection:CreateToggle("Team Check", nil, function(S
 	Config.TeamCheck = State
 end)
 TeamCheckToggle:SetState(Config.TeamCheck)
+
+local WallcheckToggle = AimbotSection:CreateToggle("Wallcheck", nil, function(State)
+	Config.Wallcheck = State
+end)
+WallcheckToggle:SetState(Config.Wallcheck)
 
 local FoVSlider = AimbotSection:CreateSlider("Field Of View", 0,1000,nil,true, function(Value)
 	Config.FieldOfView = Value
@@ -161,6 +167,22 @@ local function TeamCheck(Target)
     return true
 end
 
+local function WallCheck(Part)
+	if Config.Wallcheck and Part then
+		local Camera = Workspace.CurrentCamera
+		local CameraPosition = Camera.CFrame.Position
+		local RaycastParameters = RaycastParams.new()
+		RaycastParameters.FilterType = Enum.RaycastFilterType.Blacklist
+		RaycastParameters.FilterDescendantsInstances = {LocalPlayer.Character,Part.Parent}
+		RaycastParameters.IgnoreWater = true
+		
+		if Workspace:Raycast(CameraPosition, Part.Position - CameraPosition, RaycastParameters) then
+			return false
+		end
+	end
+	return true
+end
+
 function GetTarget()
 	local Camera = Workspace.CurrentCamera
 	if Config.TargetMode == "NPC" then
@@ -169,7 +191,7 @@ function GetTarget()
 				if NPC:FindFirstChildOfClass("Humanoid") and not NPC:FindFirstChildOfClass("Humanoid"):FindFirstChild("Free") and NPC:FindFirstChild(Config.AimHitbox) then
 					if NPC:FindFirstChildOfClass("Humanoid") and NPC:FindFirstChildOfClass("Humanoid").Health ~= 0 then
 						local Vector, OnScreen = Camera:WorldToViewportPoint(NPC:FindFirstChild(Config.AimHitbox).Position)
-						if OnScreen then
+						if OnScreen and WallCheck(NPC:FindFirstChild(Config.AimHitbox)) then
 							local VectorMagnitude = (Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y) - Vector2.new(Vector.X, Vector.Y)).Magnitude
 							if VectorMagnitude <= Config.FieldOfView then
 								return NPC:FindFirstChild(Config.AimHitbox)
@@ -185,7 +207,7 @@ function GetTarget()
 				if Player.Character and Player.Character:FindFirstChild(Config.AimHitbox) then
 					if Player.Character:FindFirstChildOfClass("Humanoid") and Player.Character:FindFirstChildOfClass("Humanoid").Health ~= 0 then
 						local Vector, OnScreen = Camera:WorldToViewportPoint(Player.Character:FindFirstChild(Config.AimHitbox).Position)
-						if OnScreen then
+						if OnScreen and WallCheck(Player.Character:FindFirstChild(Config.AimHitbox)) then
 							local VectorMagnitude = (Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y) - Vector2.new(Vector.X, Vector.Y)).Magnitude
 							if VectorMagnitude <= Config.FieldOfView then
 								return Player.Character:FindFirstChild(Config.AimHitbox)
