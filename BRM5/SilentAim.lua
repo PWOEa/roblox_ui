@@ -9,6 +9,7 @@ local NPCFolder = Workspace.Custom:FindFirstChild("-1") or Workspace.Custom:Find
 
 if not getgenv().Config then
 getgenv().Config = {
+	-- Circle
 	CircleVisible = true,
 	CircleTransparency = 1,
 	CircleColor = Color3.fromRGB(255,128,64),
@@ -16,12 +17,28 @@ getgenv().Config = {
 	CircleNumSides = 30,
 	CircleFilled = false,
 
+	-- ESP
+	OutlineVisible = true,
+    TextVisible = false,
+    BoxVisible = false,
+    Color = Color3.fromRGB(255,128,64),
+
+	NPCOutlineVisible = true,
+    NPCTextVisible = true,
+    NPCBoxVisible = true,
+    NPCColor = Color3.fromRGB(255,128,64),
+
+	-- Aimbot
 	SilentAim = true,
+	Aimbot = false,
+	Wallcheck = false,
 	TeamCheck = false,
+
+	-- Aimbot Settings
+	Sensitivity = 0.5,
 	FieldOfView = 100,
 	TargetMode = "NPC",
 	AimHitbox = "Head",
-	Wallcheck = false
 }
 end
 
@@ -39,6 +56,8 @@ local UITab = Window:CreateTab("UI Settings")
 
 local AimbotSection = MainTab:CreateSection("Aimbot")
 local CircleSection = MainTab:CreateSection("Circle")
+local NPCESPSection = MainTab:CreateSection("NPC ESP")
+local ESPSection = MainTab:CreateSection("Player ESP")
 local MenuSection = UITab:CreateSection("Menu")
 local BackgroundSection = UITab:CreateSection("Background")
 
@@ -46,6 +65,11 @@ local SilentAimToggle = AimbotSection:CreateToggle("Silent Aim", nil, function(S
 	Config.SilentAim = State
 end)
 SilentAimToggle:SetState(Config.SilentAim)
+
+local AimbotToggle = AimbotSection:CreateToggle("Aimbot", nil, function(State)
+	Config.Aimbot = State
+end)
+AimbotToggle:SetState(Config.Aimbot)
 
 local TeamCheckToggle = AimbotSection:CreateToggle("Team Check", nil, function(State)
 	Config.TeamCheck = State
@@ -57,10 +81,15 @@ local WallcheckToggle = AimbotSection:CreateToggle("Wallcheck", nil, function(St
 end)
 WallcheckToggle:SetState(Config.Wallcheck)
 
-local FoVSlider = AimbotSection:CreateSlider("Field Of View", 0,1000,nil,true, function(Value)
+local SensitivitySlider = AimbotSection:CreateSlider("Sensitivity", 0,1,nil,false, function(Value)
+	Config.Sensitivity = Value
+end)
+SensitivitySlider:SetValue(Config.Sensitivity)
+
+local FOVSlider = AimbotSection:CreateSlider("Field Of View", 0,1000,nil,true, function(Value)
 	Config.FieldOfView = Value
 end)
-FoVSlider:SetValue(Config.FieldOfView)
+FOVSlider:SetValue(Config.FieldOfView)
 
 local TargetDropdown = AimbotSection:CreateDropdown("Target", {"NPC","Player"}, function(String)
 	if String == "NPC" then
@@ -107,6 +136,46 @@ local CircleFilledToggle = CircleSection:CreateToggle("Circle Filled", nil, func
 	Config.CircleFilled = State
 end)
 CircleFilledToggle:SetState(Config.CircleFilled)
+
+local NPCBoxToggle = NPCESPSection:CreateToggle("Box Visible", nil, function(State)
+	Config.NPCBoxVisible = State
+end)
+NPCBoxToggle:SetState(Config.NPCBoxVisible)
+
+local NPCTextToggle = NPCESPSection:CreateToggle("Text Visible", nil, function(State)
+	Config.NPCTextVisible = State
+end)
+NPCTextToggle:SetState(Config.NPCTextVisible)
+
+local NPCOutlineToggle = NPCESPSection:CreateToggle("Outline Visible", nil, function(State)
+	Config.NPCOutlineVisible = State
+end)
+NPCOutlineToggle:SetState(Config.NPCOutlineVisible)
+
+local NPCColorpicker = NPCESPSection:CreateColorpicker("ESP Color", function(Color)
+	Config.NPCColor = Color
+end)
+NPCColorpicker:UpdateColor(Config.NPCColor)
+
+local BoxToggle = ESPSection:CreateToggle("Box Visible", nil, function(State)
+	Config.BoxVisible = State
+end)
+BoxToggle:SetState(Config.BoxVisible)
+
+local TextToggle = ESPSection:CreateToggle("Text Visible", nil, function(State)
+	Config.TextVisible = State
+end)
+TextToggle:SetState(Config.TextVisible)
+
+local OutlineToggle = ESPSection:CreateToggle("Outline Visible", nil, function(State)
+	Config.OutlineVisible = State
+end)
+OutlineToggle:SetState(Config.OutlineVisible)
+
+local Colorpicker = ESPSection:CreateColorpicker("ESP Color", function(Color)
+	Config.Color = Color
+end)
+Colorpicker:UpdateColor(Config.Color)
 
 
 local UIToggle = MenuSection:CreateToggle("UI Toggle", nil, function(State)
@@ -156,6 +225,28 @@ local TileSizeSlider = BackgroundSection:CreateSlider("Tile Scale",0,1,nil,false
 end)
 TileSizeSlider:SetValue(0.5)
 
+local function CalculateBox(Model)
+	local CFrame, Size = Model:GetBoundingBox()
+	local Camera = Workspace.CurrentCamera
+    
+	local CornerTable = {
+		Camera:WorldToViewportPoint(Vector3.new(CFrame.X - Size.X / 2, CFrame.Y + Size.Y / 2, CFrame.Z)), -- TopLeft
+		Camera:WorldToViewportPoint(Vector3.new(CFrame.X + Size.X / 2, CFrame.Y + Size.Y / 2, CFrame.Z)), -- TopRight
+		Camera:WorldToViewportPoint(Vector3.new(CFrame.X - Size.X / 2, CFrame.Y - Size.Y / 2, CFrame.Z)), -- BottomLeft
+		Camera:WorldToViewportPoint(Vector3.new(CFrame.X + Size.X / 2, CFrame.Y - Size.Y / 2, CFrame.Z)), -- BottomRight
+	}
+
+	local WorldPosition, OnScreen = Camera:WorldToViewportPoint(CFrame.Position)
+	local Size = Vector2.new((CornerTable[1] - CornerTable[2]).Magnitude, (CornerTable[1] - CornerTable[3]).Magnitude)
+	local Position = Vector2.new(WorldPosition.X - Size.X / 2, WorldPosition.Y - Size.Y / 2)
+    
+	return Position, Size, OnScreen
+end
+
+local function GetDistanceFromClient(Position)
+    return LocalPlayer:DistanceFromCharacter(Position)
+end
+
 local function TeamCheck(Target)
     if Config.TeamCheck then
         if LocalPlayer.Team ~= Target.Team then
@@ -183,18 +274,156 @@ local function WallCheck(Part)
 	return true
 end
 
+local function CreateESPNPC(Model)
+    local Text = Drawing.new("Text")
+    local BoxOutline = Drawing.new("Square")
+    local Box = Drawing.new("Square")
+
+    local Render = RunService.RenderStepped:Connect(function()
+        if Model and Model:FindFirstChild("HumanoidRootPart") then
+            if Model:FindFirstChildOfClass("Humanoid") and Model:FindFirstChildOfClass("Humanoid").Health ~= 0 then
+                Camera = Workspace.CurrentCamera
+                local Position, Size, OnScreen = CalculateBox(Model)
+				local Distance = GetDistanceFromClient(Model.HumanoidRootPart.Position)
+				local Health = Model:FindFirstChildOfClass("Humanoid").Health
+                if OnScreen then
+                    Text.Visible = Config.NPCTextVisible
+                    Text.Transparency = 1
+                    Text.Color = Color3.fromRGB(255,255,255)
+                    Text.Text = string.format("%s\n%d HP\n%d studs",string.sub(Model.Name,38),Health,Distance)
+                    Text.Size = 16
+                    Text.Center = true
+                    Text.Outline = Config.NPCOutlineVisible
+                    Text.OutlineColor = Color3.fromRGB(0,0,0)
+
+                    Text.Position = Vector2.new(Position.X + Size.X/2, Position.Y + Size.Y)
+
+                    BoxOutline.Visible = Config.NPCBoxVisible and Config.NPCOutlineVisible
+                    BoxOutline.Transparency = 1
+                    BoxOutline.Color = Color3.fromRGB(0,0,0)
+                    BoxOutline.Thickness = 3
+                    BoxOutline.Filled = false
+
+                    BoxOutline.Size = Size
+                    BoxOutline.Position = Position
+
+                    Box.Visible = Config.NPCBoxVisible
+                    Box.Transparency = 1
+                    Box.Color = Config.NPCColor
+                    Box.Thickness = 1
+                    Box.Filled = false
+
+                    Box.Size = Size
+                    Box.Position = Position
+                else
+                    Text.Visible = false
+                    BoxOutline.Visible = false
+                    Box.Visible = false
+                end
+            else
+                Text.Visible = false
+                BoxOutline.Visible = false
+                Box.Visible = false
+            end
+		else
+			Text.Visible = false
+			BoxOutline.Visible = false
+			Box.Visible = false
+        end
+    end)
+
+    Model.AncestryChanged:Connect(function(Child, Parent)
+        if not Parent then
+            Render:Disconnect()
+            Text:Remove()
+            BoxOutline:Remove()
+            Box:Remove()
+        end
+    end)
+end
+
+local function CreateESP(Model)
+    local Text = Drawing.new("Text")
+    local BoxOutline = Drawing.new("Square")
+    local Box = Drawing.new("Square")
+
+    local Render = RunService.RenderStepped:Connect(function()
+        if Model and Model:FindFirstChild("HumanoidRootPart") then
+            if Model:FindFirstChildOfClass("Humanoid") and Model:FindFirstChildOfClass("Humanoid").Health ~= 0 then
+                Camera = Workspace.CurrentCamera
+                local Position, Size, OnScreen = CalculateBox(Model)
+				local Distance = GetDistanceFromClient(Model.HumanoidRootPart.Position)
+				local Health = Model:FindFirstChildOfClass("Humanoid").Health
+                if OnScreen then
+                    Text.Visible = Config.TextVisible
+                    Text.Transparency = 1
+                    Text.Color = Color3.fromRGB(255,255,255)
+                    Text.Text = string.format("%s\n%d HP\n%d studs",Model.Name,Health,Distance)
+                    Text.Size = 16
+                    Text.Center = true
+                    Text.Outline = Config.OutlineVisible
+                    Text.OutlineColor = Color3.fromRGB(0,0,0)
+                    Text.Position = Vector2.new(Position.X + Size.X/2, Position.Y + Size.Y)
+
+                    BoxOutline.Visible = Config.BoxVisible and Config.OutlineVisible
+                    BoxOutline.Transparency = 1
+                    BoxOutline.Color = Color3.fromRGB(0,0,0)
+                    BoxOutline.Thickness = 3
+                    BoxOutline.Filled = false
+
+                    BoxOutline.Size = Size
+                    BoxOutline.Position = Position
+
+                    Box.Visible = Config.BoxVisible
+                    Box.Transparency = 1
+                    Box.Color = Config.Color
+                    Box.Thickness = 1
+                    Box.Filled = false
+
+                    Box.Size = Size
+                    Box.Position = Position
+                else
+                    Text.Visible = false
+                    BoxOutline.Visible = false
+                    Box.Visible = false
+                end
+            else
+                Text.Visible = false
+                BoxOutline.Visible = false
+                Box.Visible = false
+            end
+		else
+			Text.Visible = false
+			BoxOutline.Visible = false
+			Box.Visible = false
+        end
+    end)
+
+    Model.AncestryChanged:Connect(function(Child, Parent)
+        if not Parent then
+            Render:Disconnect()
+            Text:Remove()
+            BoxOutline:Remove()
+            Box:Remove()
+        end
+    end)
+end
+
 function GetTarget()
+	local ClosestPlayer = nil
+	local FarthestDistance = math.huge
 	local Camera = Workspace.CurrentCamera
 	if Config.TargetMode == "NPC" then
 		if NPCFolder then
 			for _, NPC in pairs(NPCFolder:GetChildren()) do
 				if NPC:FindFirstChildOfClass("Humanoid") and not NPC:FindFirstChildOfClass("Humanoid"):FindFirstChild("Free") and NPC:FindFirstChild(Config.AimHitbox) then
 					if NPC:FindFirstChildOfClass("Humanoid") and NPC:FindFirstChildOfClass("Humanoid").Health ~= 0 then
-						local Vector, OnScreen = Camera:WorldToViewportPoint(NPC:FindFirstChild(Config.AimHitbox).Position)
+						local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(NPC:FindFirstChild(Config.AimHitbox).Position)
 						if OnScreen and WallCheck(NPC:FindFirstChild(Config.AimHitbox)) then
-							local VectorMagnitude = (Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y) - Vector2.new(Vector.X, Vector.Y)).Magnitude
-							if VectorMagnitude <= Config.FieldOfView then
-								return NPC:FindFirstChild(Config.AimHitbox)
+							local MouseDistance = (Vector2.new(ScreenPosition.X, ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
+							if MouseDistance < FarthestDistance and MouseDistance <= Config.FieldOfView then
+								FarthestDistance = MouseDistance
+								ClosestPlayer = NPC:FindFirstChild(Config.AimHitbox)
 							end
 						end
 					end
@@ -206,11 +435,12 @@ function GetTarget()
 			if Player ~= LocalPlayer and TeamCheck(Player) then
 				if Player.Character and Player.Character:FindFirstChild(Config.AimHitbox) then
 					if Player.Character:FindFirstChildOfClass("Humanoid") and Player.Character:FindFirstChildOfClass("Humanoid").Health ~= 0 then
-						local Vector, OnScreen = Camera:WorldToViewportPoint(Player.Character:FindFirstChild(Config.AimHitbox).Position)
+						local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(Player.Character:FindFirstChild(Config.AimHitbox).Position)
 						if OnScreen and WallCheck(Player.Character:FindFirstChild(Config.AimHitbox)) then
-							local VectorMagnitude = (Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y) - Vector2.new(Vector.X, Vector.Y)).Magnitude
-							if VectorMagnitude <= Config.FieldOfView then
-								return Player.Character:FindFirstChild(Config.AimHitbox)
+							local MouseDistance = (Vector2.new(ScreenPosition.X, ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
+							if MouseDistance < FarthestDistance and MouseDistance <= Config.FieldOfView then
+								FarthestDistance = MouseDistance
+								ClosestPlayer = Player.Character:FindFirstChild(Config.AimHitbox)
 							end
 						end
 					end
@@ -218,6 +448,7 @@ function GetTarget()
 			end
 		end
 	end
+	return ClosestPlayer
 end
 
 -- silent aim
@@ -258,4 +489,48 @@ RunService.Heartbeat:Connect(function()
 	else
 		hit = nil
 	end
+
+	if Config.Aimbot then
+        if UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
+            local Target = GetTarget()
+            if Target then
+                local Camera = Workspace.CurrentCamera
+                local Mouse = UserInputService:GetMouseLocation()
+                local TargetPos = Camera:WorldToViewportPoint(Target.Position)
+                mousemoverel((TargetPos.X - Mouse.X) * Config.Sensitivity, (TargetPos.Y - Mouse.Y) * Config.Sensitivity)
+            end
+        end
+    end
+end)
+
+if NPCFolder then
+	for Index, NPC in pairs(NPCFolder:GetChildren()) do
+		wait(0.1)
+		if NPC:FindFirstChildOfClass("Humanoid") and not NPC.Humanoid:FindFirstChild("Free") then
+			CreateESPNPC(NPC)
+		end
+	end
+
+	NPCFolder.ChildAdded:Connect(function(NPC)
+		wait(0.1)
+		if NPC:FindFirstChildOfClass("Humanoid") and not NPC.Humanoid:FindFirstChild("Free") then
+			CreateESPNPC(NPC)
+		end
+	end)
+end
+
+for Index, Player in pairs(PlayerService:GetPlayers()) do
+    if Player == LocalPlayer then continue end
+	if Player.Character then
+    	CreateESP(Player.Character)
+	end
+    Player.CharacterAdded:Connect(function(Character)
+        CreateESP(Character)
+    end)
+end
+
+PlayerService.PlayerAdded:Connect(function(Player)
+    Player.CharacterAdded:Connect(function(Character)
+        CreateESP(Character)
+    end)
 end)
