@@ -1,5 +1,4 @@
 local Network = loadstring(game:HttpGet("https://raw.githubusercontent.com/AlexR32/Roblox/main/BRM5/Network.lua"))() -- by Averias https://v3rmillion.net/showthread.php?tid=1096231 <3
-local Notification = loadstring(game:HttpGet("https://api.irisapp.ca/Scripts/IrisBetterNotifications.lua"))() -- thanks to iris for better notifications
 
 local UserInputService = game:GetService("UserInputService")
 local HttpService = game:GetService("HttpService")
