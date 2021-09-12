@@ -4,26 +4,19 @@ local Notification = loadstring(game:HttpGet("https://api.irisapp.ca/Scripts/Iri
 local UserInputService = game:GetService("UserInputService")
 local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
-local GuiService = game:GetService("GuiService")
 
 local PlayerService = game:GetService("Players")
 local LocalPlayer = PlayerService.LocalPlayer
 local PlayerGui = LocalPlayer.PlayerGui
 
 local Workspace = game:GetService("Workspace")
-local Camera = Workspace.CurrentCamera
-local CameraPosition = Camera.CFrame.Position
-
 local NPCFolder = Workspace.Custom:FindFirstChild("-1")
 local PropFolder = Workspace.Custom["0"].Airbase.Props
 
--- dont touch 
-local MenuOpened = false
---local BagDelivering = false
-local target = nil
-local globalTable = {data, firearmInventory}
+-- do not touch 
+local globalTable = nil
 
--- nice parachute bypass
+-- parachute bypass
 local Float = Instance.new("Part")
 Float.Name = "Autofarm AntiParachute"
 Float.Parent = Workspace
@@ -33,63 +26,22 @@ Float.Size = Vector3.new(10,1,10)
 
 getgenv().AutofarmConfig = {
     Enabled = false,
-    --BagsFarm = false, -- work in progress
-    Align = CFrame.new(0,0,0) -- aling your character to npc (pretty useless but i let it be just in case)
+    Align = CFrame.new(0,-6,0) -- aling your character to npc
 }
 
-local function alert(Message, Duration)
-    Notification.Notify("Autofarm by AlexR32#3232", Message, "", {
-        Duration = Duration,
-        TitleSettings = {
-            BackgroundColor3 = Color3.fromRGB(255, 255 ,255),
-            TextColor3 = Color3.fromRGB(255, 255, 255),
-            TextScaled = false,
-            TextWrapped = false,
-            TextSize = 14,
-            Font = Enum.Font.Code,
-            TextXAlignment = Enum.TextXAlignment.Left,
-            TextYAlignment = Enum.TextYAlignment.Bottom
-        },
-        DescriptionSettings = {
-            BackgroundColor3 = Color3.fromRGB(255, 255 ,255),
-            TextColor3 = Color3.fromRGB(255, 255, 255),
-            TextScaled = true,
-            TextWrapped = true,
-            TextSize = 18,
-            Font = Enum.Font.Code,
-            TextXAlignment = Enum.TextXAlignment.Left,
-            TextYAlignment = Enum.TextYAlignment.Top,
-        },
-        IconSettings = {
-            BackgroundTransparency = 1,
-            BackgroundColor3 = Color3.fromRGB(255,255,255),
-        },
-        GradientSettings = {
-            GradientEnabled = false,
-            SolidColorEnabled = true,
-            SolidColor = Color3.fromRGB(120,120,120),
-            Retract = false,
-            Extend = true,
-        },
-        Main = {
-            BorderColor3 = Color3.fromRGB(0,0,0),
-            BackgroundColor3 = Color3.fromRGB(30,30,30),
-            BackgroundTransparency = 0.5,
-            Rounding = false,
-            BorderSizePixel = 1
-        }
-    })
+local function notify(message, color)
+    for _,Instance in pairs(getnilinstances()) do
+        if Instance.Name == "InterfaceHandler" then
+            require(Instance).ScreenMessage(nil, message, color)
+            break
+        end
+    end
 end
 
-local function isAlive()
+local function isAlive() -- resets character when you down
     if LocalPlayer.Character then
-        if LocalPlayer.Character:FindFirstChildOfClass("Humanoid").Health <= 10 then
-            Network:FireServer("resetCharacter") -- reset character when you down
-            --LocalPlayer.Character.Humanoid.Health = 0
-        --elseif LocalPlayer.Character:FindFirstChildOfClass("Humanoid").Health <= 50 then
-            --Network:FireServer("useMedical", 1)
-        else
-            return true
+        if LocalPlayer.Character:FindFirstChildOfClass("Humanoid") and LocalPlayer.Character:FindFirstChildOfClass("Humanoid").Health <= 10 then
+            Network:FireServer("resetCharacter")
         end
     end
 end
@@ -102,16 +54,7 @@ local function checkMenu() -- basic menu check and deploy button fire
     end
 end
 
-local function checkAmmo() -- simple check ammo based on player's gui
-    local Clip = PlayerGui.Screen["#main"]["#hud"].right["#ammo"]["#clip"]
-    if Clip.Text == "0" then
-        return false
-    else
-        return true
-    end
-end
-
-local function getAmmo() -- hacky method how to get ammo fast
+local function getAmmo() -- get ammo function, self-explanatory
     for _, Prop in pairs(PropFolder:GetDescendants()) do
         if Prop:IsA("StringValue") then
             if Prop.Value == '[["refillAmmo","Refill Ammo",[]]]' then -- find ammo box
@@ -123,55 +66,21 @@ local function getAmmo() -- hacky method how to get ammo fast
         end
     end
     Network:FireServer("interactObject", 1) -- use ammo box
-    --keypress(0x46)
-    --keyrelease(0x46)
-    --mouse1click()
 end
 
-local function checkGun(auto) -- simple gun check
+local function checkGun(auto) -- gun check and equip gun mechanism
     local Ammo = PlayerGui.Screen["#main"]["#hud"].right["#ammo"]
     if Ammo.Visible then -- its not visible when you dont have gun
         return true
     else
         if auto then
+            Network:InvokeServer("equipTool", 0) -- unequip already hold on gun
             Network:InvokeServer("equipTool", 1) -- equip your main gun if its not
-            --keypress(0x31)
-            --keyrelease(0x31)
         end
         return false
     end
 end
---[[
-local function checkBag() -- work in progress
-    for _,Bag in pairs(Workspace.Custom:GetDescendants()) do
-        if Bag.Name == "Bag" then
-            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                LocalPlayer.Character.HumanoidRootPart.CFrame = Bag.CFrame
-                Network:FireServer("interactObject", 1)
-            end
-        end
-    end
-    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Objective") then
-        BagDelivering = true
-        return true
-    end
-    return false
-end
 
-local function deliverBag() -- work in progress
-    LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-3510, 63, 532)
-    Network:FireServer("interactObject", 1)
-    local Dialogue = PlayerGui.Screen["#main"]["#hud"]["#dialogue"]
-    for _, Button in pairs(Dialogue:GetChildren()) do
-        if Button.Name == "TextButton" then
-            if Button.Text == "I've got some goods you might want." then
-                getconnections(Button.MouseButton1Click)[1]:Fire()
-            end
-        end
-    end
-    BagDelivering = false
-end
-]]
 -- get npc and tp
 local function getTarget()
     for _, NPC in pairs(NPCFolder:GetChildren()) do
@@ -190,53 +99,25 @@ local function getTarget()
     return nil
 end
 
-local function returnHit(target, args)
-    CameraPosition = Camera.CFrame.Position
-    if args[1].Origin == CameraPosition then
-        args[1] = Ray.new(CameraPosition, target.Position - CameraPosition)
-        return
-    end
-end
-
-namecall = hookmetamethod(game, "__namecall", function(self, ...)
-    local namecallmethod = getnamecallmethod()
+metatable = hookfunction(getgenv().setmetatable, function(...)
     local args = {...}
-    if namecallmethod == "FindPartOnRayWithIgnoreList" then
-        if target then
-            returnHit(target, args)
-        end
+    if args[1]._ammo then
+        globalTable = args[1]
     end
-    return namecall(self, unpack(args))
+    return metatable(...)
 end)
-
-hook = hookfunction(getgenv().setmetatable, function(...)
-    local args = {...}
-    if args[1]._data then
-        globalTable.data = args[1]
-    end
-    return hook(...)
-end)
-
-for _,func in pairs(getgc()) do
-    local fenv = getfenv(func)
-    if fenv.script and fenv.script.Name == "FirearmInventory" then
-        globalTable.firearmInventory = fenv.script
-        break
-    end
-end
 
 -- main render function
 RunService.RenderStepped:Connect(function()
-    if AutofarmConfig.Enabled --[[and not BagDelivering]] then
+    if AutofarmConfig.Enabled then
         if checkGun(false) then
-            if checkAmmo() then
-                target = getTarget()
-                if target and globalTable.data then
-                    --local GUID = HttpService:GenerateGUID(false)
-                    --Network:FireServer("activateTool", "discharge", GUID, 0, {{target.Position.X,target.Position.Y,target.Position.Z}})
-                    --local test = target.CFrame:PointToObjectSpace(target.CFrame)
-                    --Network:FireServer("activateTool", "land", GUID .. "1", target:GetFullName(), {test.X,test,Y,test,Z})
-                    require(globalTable.firearmInventory).Discharge(globalTable.data)
+            if globalTable and globalTable._ammo ~= 0 then -- ammo check
+                local target = getTarget()
+                if target then
+                    local GUID = HttpService:GenerateGUID(false)
+                    Network:FireServer("activateTool", "discharge", GUID, 0, {{target.Position.X,target.Position.Y,target.Position.Z}})
+                    Network:FireServer("activateTool", "land", GUID .. "1", target:GetFullName(), {0,0,0})
+                    globalTable._ammo = globalTable._ammo - 1
                 else
                     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
                         LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-1705, 800, -4532)
@@ -252,7 +133,7 @@ end)
 
 -- delay for some functions (dont ask me why i am not using while true do loop or any other shit)
 local Wait = 0
-local WaitMax = 2
+local WaitMax = 1
 RunService.Heartbeat:Connect(function(Delta)
     Wait += Delta
     if Wait >= WaitMax then
@@ -261,21 +142,16 @@ RunService.Heartbeat:Connect(function(Delta)
             checkGun(true)
             isAlive()
         end
-        if AutofarmConfig.BagsFarm then
-            if checkBag() and BagDelivering then
-                deliverBag()
-            end
-        end
         Wait = 0
     end
 end)
 
--- simple keybind with alert
+-- simple keybind with notify
 UserInputService.InputBegan:Connect(function(Input)
     if Input.KeyCode == Enum.KeyCode.F6 then
         AutofarmConfig.Enabled = not AutofarmConfig.Enabled
-        alert("Autofarm " .. (AutofarmConfig.Enabled and "enabled" or "disabled"),1)
+        notify("Autofarm " .. (AutofarmConfig.Enabled and "enabled" or "disabled"),Color3.fromRGB(255,255,255))
     end
 end)
 
-alert("Press F6 to start farming",5) -- send message when script is executed
+notify("Autofarm by AlexR32#0157\nPress F6 to start farming",Color3.fromRGB(255,255,255)) -- send message when script is executed
