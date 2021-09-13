@@ -132,7 +132,7 @@ end)
 
 -- delay for some functions (dont ask me why i am not using while true do loop or any other shit)
 local Wait = 0
-local WaitMax = 1
+local WaitMax = 2
 RunService.Heartbeat:Connect(function(Delta)
     Wait += Delta
     if Wait >= WaitMax then
