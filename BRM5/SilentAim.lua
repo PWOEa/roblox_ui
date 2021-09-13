@@ -39,6 +39,10 @@ getgenv().Config = {
 	FieldOfView = 100,
 	TargetMode = "NPC",
 	AimHitbox = "Head",
+
+	NoRecoil = false,
+	EnableSpeed = false,
+	Speed = 100
 }
 end
 
@@ -58,6 +62,7 @@ local AimbotSection = MainTab:CreateSection("Aimbot")
 local CircleSection = MainTab:CreateSection("Circle")
 local NPCESPSection = MainTab:CreateSection("NPC ESP")
 local ESPSection = MainTab:CreateSection("Player ESP")
+local OtherSection = MainTab:CreateSection("Other")
 local MenuSection = UITab:CreateSection("Menu")
 local BackgroundSection = UITab:CreateSection("Background")
 
@@ -177,6 +182,20 @@ local Colorpicker = ESPSection:CreateColorpicker("ESP Color", function(Color)
 end)
 Colorpicker:UpdateColor(Config.Color)
 
+local SpeedToggle = OtherSection:CreateToggle("Enabled Speedhack", nil, function(State)
+	Config.EnableSpeed = State
+end)
+SpeedToggle:SetState(Config.EnableSpeed)
+
+local NoRecoilToggle = OtherSection:CreateToggle("No Recoil", nil, function(State)
+	Config.NoRecoil = State
+end)
+NoRecoilToggle:SetState(Config.NoRecoil)
+
+local SpeedSlider = OtherSection:CreateSlider("Speedhack Value", 0,1000,nil,true, function(Value)
+	Config.Speed = Value
+end)
+SpeedSlider:SetValue(Config.Speed)
 
 local UIToggle = MenuSection:CreateToggle("UI Toggle", nil, function(State)
 	Window:Toggle(State)
@@ -461,6 +480,16 @@ local function returnHit(hit, args)
 	end
 end
 
+local globalTable = {data, other}
+hook = hookfunction(getgenv().setmetatable, function(table,metatable)
+    if table._data and table._character then
+        globalTable.data = table
+    elseif table._bob then
+        globalTable.other = table
+    end
+    return hook(table,metatable)
+end)
+
 namecall = hookmetamethod(game, "__namecall", function(self, ...)
     local namecallmethod = getnamecallmethod()
     local args = {...}
@@ -483,6 +512,15 @@ RunService.Heartbeat:Connect(function()
     Circle.Radius = Config.FieldOfView
     Circle.Filled = Config.CircleFilled
     Circle.Position = UserInputService:GetMouseLocation()
+
+	if Config.NoRecoil and globalTable.data then
+        globalTable.data._data.stats.recoil = 0
+    end
+    if Config.EnableSpeed and globalTable.data and globalTable.other then
+		globalTable.data._character._speed = Config.Speed
+        globalTable.other._bob = 0
+        globalTable.other._shake = 0
+    end
 
 	if Config.SilentAim then
 		hit = GetTarget()
