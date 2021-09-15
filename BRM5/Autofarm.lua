@@ -14,6 +14,7 @@ local PropFolder = Workspace.Custom["0"].Airbase.Props
 
 -- do not touch 
 local globalTable = nil
+local afkPlace = 1
 
 -- parachute bypass
 local Float = Instance.new("Part")
@@ -25,16 +26,23 @@ Float.Size = Vector3.new(10,1,10)
 
 getgenv().AutofarmConfig = {
     Enabled = false,
-    Align = CFrame.new(0,-6,0) -- aling your character to npc
+    Align = CFrame.new(0,-5,0) -- aling your character to npc
 }
 
-local function notify(message, color)
+local function GetNilScript(Name)
     for _,Instance in pairs(getnilinstances()) do
-        if Instance.Name == "InterfaceHandler" then
-            require(Instance).ScreenMessage(nil, message, color)
-            break
-        end
+        if Instance.Name == Name then
+            return Instance
+        end 
     end
+end
+
+local function notify(message, color)
+    require(GetNilScript("InterfaceHandler")).ScreenMessage(nil, message, color)
+end
+
+local function fadeGameplay(state)
+    require(GetNilScript("InterfaceHandler")).FadeGameplay(nil, state)
 end
 
 local function isAlive() -- resets character when you down
@@ -50,6 +58,7 @@ local function checkMenu() -- basic menu check and deploy button fire
     if Menu.Visible then
         local Deploy = Menu["#screens"].template["#tab"]["#deploy"]
         getconnections(Deploy.MouseButton1Click)[1]:Fire()
+        fadeGameplay(true) -- fix
     end
 end
 
@@ -119,8 +128,22 @@ RunService.RenderStepped:Connect(function()
                     globalTable._ammo = globalTable._ammo - 1
                 else
                     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                        LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-1705, 800, -4532)
-                        Float.Position = LocalPlayer.Character.HumanoidRootPart.Position - Vector3.new(0,4,0)
+                        if afkPlace == 1 then -- mountain
+                            LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-1705, 815, -4532)
+                            Float.Position = LocalPlayer.Character.HumanoidRootPart.Position - Vector3.new(0,4,0)
+                        elseif afkPlace == 2 then -- desert
+                            LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-5156, 99, 5643)
+                            Float.Position = LocalPlayer.Character.HumanoidRootPart.Position - Vector3.new(0,4,0)
+                        elseif afkPlace == 3 then -- village
+                            LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(490, 109, 70)
+                            Float.Position = LocalPlayer.Character.HumanoidRootPart.Position - Vector3.new(0,4,0)
+                        elseif afkPlace == 4 then -- crator
+                            LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(537, 15, 2195)
+                            Float.Position = LocalPlayer.Character.HumanoidRootPart.Position - Vector3.new(0,4,0)
+                        elseif afkPlace == 5 then -- naval base
+                            LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(6592, 120, 2295)
+                            Float.Position = LocalPlayer.Character.HumanoidRootPart.Position - Vector3.new(0,4,0)
+                        end
                     end
                 end
             else
@@ -132,7 +155,7 @@ end)
 
 -- delay for some functions (dont ask me why i am not using while true do loop or any other shit)
 local Wait = 0
-local WaitMax = 2
+local WaitMax = 5
 RunService.Heartbeat:Connect(function(Delta)
     Wait += Delta
     if Wait >= WaitMax then
@@ -140,16 +163,29 @@ RunService.Heartbeat:Connect(function(Delta)
             checkMenu()
             checkGun(true)
             isAlive()
+            if afkPlace < 5 then
+                afkPlace = afkPlace + 1
+            else
+                afkPlace = 1
+            end
+            print(afkPlace)
         end
         Wait = 0
     end
 end)
 
--- simple keybind with notify
+-- keybind
 UserInputService.InputBegan:Connect(function(Input)
     if Input.KeyCode == Enum.KeyCode.F6 then
         AutofarmConfig.Enabled = not AutofarmConfig.Enabled
-        notify("Autofarm " .. (AutofarmConfig.Enabled and "enabled" or "disabled"),Color3.fromRGB(255,255,255))
+        if not AutofarmConfig.Enabled then
+            notify("teleporting to spawn please wait 5 sec"),Color3.fromRGB(255,255,255))
+            wait(WaitMax)
+            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-3550, 58.5, 750)
+            end
+        end
+        notify("Autofarm " .. (AutofarmConfig.Enabled and "enabled (wait 5 secs)" or "disabled"),Color3.fromRGB(255,255,255))
     end
 end)
 
