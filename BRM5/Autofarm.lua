@@ -179,13 +179,12 @@ UserInputService.InputBegan:Connect(function(Input)
     if Input.KeyCode == Enum.KeyCode.F6 then
         AutofarmConfig.Enabled = not AutofarmConfig.Enabled
         if not AutofarmConfig.Enabled then
-            notify("teleporting to spawn please wait 5 sec"),Color3.fromRGB(255,255,255))
-            wait(WaitMax)
             if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
                 LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-3550, 58.5, 750)
+                notify("teleported to spawn",Color3.fromRGB(255,255,255))
             end
         end
-        notify("Autofarm " .. (AutofarmConfig.Enabled and "enabled (wait 5 secs)" or "disabled"),Color3.fromRGB(255,255,255))
+        notify("Autofarm " .. (AutofarmConfig.Enabled and "enabled (wait " .. string.format("%.2f", Wait) .. " secs)" or "disabled"),Color3.fromRGB(255,255,255))
     end
 end)
 
