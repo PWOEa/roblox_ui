@@ -168,7 +168,6 @@ RunService.Heartbeat:Connect(function(Delta)
             else
                 afkPlace = 1
             end
-            print(afkPlace)
         end
         Wait = 0
     end
@@ -184,7 +183,7 @@ UserInputService.InputBegan:Connect(function(Input)
                 notify("teleported to spawn",Color3.fromRGB(255,255,255))
             end
         end
-        notify("Autofarm " .. (AutofarmConfig.Enabled and "enabled (wait " .. string.format("%.2f", Wait) .. " secs)" or "disabled"),Color3.fromRGB(255,255,255))
+        notify("Autofarm " .. (AutofarmConfig.Enabled and "enabled (" .. string.format("%.2f", Wait) .. ")" or "disabled"),Color3.fromRGB(255,255,255))
     end
 end)
 
