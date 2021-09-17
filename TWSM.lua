@@ -14,6 +14,7 @@ return function(Text, Wait)
     local Message = Folder.Message:Clone()
     Message.Parent = Screen.Container
     Message.Text = Text
+    Message.Size = UDim2.new(1,0,0,Message.TextBounds.Y)
 
     local Index = 0
     local DisplayText = Text
