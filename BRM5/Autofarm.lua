@@ -1,4 +1,5 @@
 local Network = loadstring(game:HttpGet("https://raw.githubusercontent.com/AlexR32/Roblox/main/BRM5/Network.lua"))() -- by Averias https://v3rmillion.net/showthread.php?tid=1096231 <3
+local notify = loadstring(game:HttpGet("https://raw.githubusercontent.com/AlexR32/Roblox/main/TWSM.lua"))()
 
 local UserInputService = game:GetService("UserInputService")
 local HttpService = game:GetService("HttpService")
@@ -12,7 +13,7 @@ local Workspace = game:GetService("Workspace")
 local NPCFolder = Workspace.Custom:FindFirstChild("-1")
 local PropFolder = Workspace.Custom["0"].Airbase.Props
 
--- do not touch 
+-- do not touch
 local globalTable = nil
 local afkPlace = 1
 
@@ -33,14 +34,14 @@ local function GetNilScript(Name)
     for _,Instance in pairs(getnilinstances()) do
         if Instance.Name == Name then
             return Instance
-        end 
+        end
     end
 end
-
+--[[
 local function notify(message, color)
     require(GetNilScript("InterfaceHandler")).ScreenMessage(nil, message, color)
 end
-
+]]
 local function fadeGameplay(state)
     require(GetNilScript("InterfaceHandler")).FadeGameplay(nil, state)
 end
@@ -107,6 +108,7 @@ local function getTarget()
     return nil
 end
 
+local metatable
 metatable = hookfunction(getgenv().setmetatable, function(...)
     local args = {...}
     if args[1]._ammo then
@@ -180,11 +182,10 @@ UserInputService.InputBegan:Connect(function(Input)
         if not AutofarmConfig.Enabled then
             if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
                 LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-3550, 58.5, 750)
-                notify("teleported to spawn",Color3.fromRGB(255,255,255))
             end
         end
-        notify("Autofarm " .. (AutofarmConfig.Enabled and "enabled (" .. string.format("%.2f", Wait) .. ")" or "disabled"),Color3.fromRGB(255,255,255))
+        notify("Autofarm " .. (AutofarmConfig.Enabled and "<font color=\"rgb(128,255,128)\">enabled</font>\n<font size=\"15\">wait ~" .. string.format("%.1f", Wait) .. " sec</font>" or "<font color=\"rgb(255,128,128)\">disabled</font>\n<font size=\"15\">(teleported to spawn)</font>"),2.5)
     end
 end)
 
-notify("Autofarm by AlexR32#0157\nPress F6 to start farming",Color3.fromRGB(255,255,255)) -- send message when script is executed
+notify("Autofarm by AlexR32#0157\nPress F6 to start farming",5) -- send message when script is executed
