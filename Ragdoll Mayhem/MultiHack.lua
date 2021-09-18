@@ -439,14 +439,14 @@ RunService.RenderStepped:Connect(function()
     Circle.Position = UserInputService:GetMouseLocation()
 
     if Config.SilentAim then
-        hit = GetTargetDummyDebug()
+        hit = GetTarget()
     else
         hit = nil
     end
 
     if Config.Aimbot then
         if UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
-            local Target = GetTargetDummyDebug()
+            local Target = GetTarget()
             if Target then
                 local Camera = Workspace.CurrentCamera
                 local Mouse = UserInputService:GetMouseLocation()
