@@ -385,34 +385,39 @@ local function GetTarget()
 end
 
 local function GetTargetDummyDebug()
+    local ClosestPlayer = nil
+    local FarthestDistance = math.huge
     local Camera = Workspace.CurrentCamera
-    for _, Player in pairs(Workspace.LiveDuders:GetChildren()) do
+    for _, Player in pairs(Workspace.LiveRagdolls:GetChildren()) do
         if Player.Name ~= LocalPlayer.Name and Player:FindFirstChild(Config.AimHitbox) then
             if Player:FindFirstChildOfClass("Humanoid") and Player:FindFirstChildOfClass("Humanoid").Health ~= 0 then
-                local Vector, OnScreen = Camera:WorldToViewportPoint(Player:FindFirstChild(Config.AimHitbox).Position)
+                local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(Player:FindFirstChild(Config.AimHitbox).Position)
                 if OnScreen then
-                    local VectorMagnitude = (Vector2.new(Vector.X, Vector.Y) - UserInputService:GetMouseLocation()).Magnitude
-                    if VectorMagnitude <= Config.FieldOfView then
-                        return Player:FindFirstChild(Config.AimHitbox)
+                    local MouseDistance = (Vector2.new(ScreenPosition.X, ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
+                    if MouseDistance < FarthestDistance and MouseDistance <= Config.FieldOfView then
+                        FarthestDistance = MouseDistance
+                        ClosestPlayer = Player:FindFirstChild(Config.AimHitbox)
                     end
                 end
             end
         end
     end
+    return ClosestPlayer
 end
 
 local function returnHit(hit, args)
     local Camera = Workspace.CurrentCamera
     local CameraPosition = Camera.CFrame.Position
-    if table.find(args[2],LocalPlayer,1) and table.find(args[2],Workspace.Drops,4) and table.find(args[2],Workspace.Projectiles,5) then
+    if table.find(args[2],LocalPlayer.Character,1) and table.find(args[2],Workspace.Drops,3) and table.find(args[2],Workspace.Drops,4) and table.find(args[2],Workspace.Projectiles,5) then
         args[1] = Ray.new(CameraPosition, hit.Position - CameraPosition)
         return
     end
 end
 
+local namecall
 namecall = hookmetamethod(game, "__namecall", function(self, ...)
-    local namecallmethod = getnamecallmethod()
     local args = {...}
+    local namecallmethod = getnamecallmethod()
     if namecallmethod == "FindPartOnRayWithIgnoreList" then
         if hit then
             returnHit(hit, args)
@@ -434,14 +439,14 @@ RunService.RenderStepped:Connect(function()
     Circle.Position = UserInputService:GetMouseLocation()
 
     if Config.SilentAim then
-        hit = GetTarget()
+        hit = GetTargetDummyDebug()
     else
         hit = nil
     end
 
     if Config.Aimbot then
         if UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
-            local Target = GetTarget()
+            local Target = GetTargetDummyDebug()
             if Target then
                 local Camera = Workspace.CurrentCamera
                 local Mouse = UserInputService:GetMouseLocation()
