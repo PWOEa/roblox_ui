@@ -6,7 +6,7 @@ local PlayerService = game:GetService("Players")
 local LocalPlayer = PlayerService.LocalPlayer
 
 local NPCFolder = Workspace.Custom:FindFirstChild("-1") or Workspace.Custom:FindFirstChild("1")
-local ESPLibrary = loadfile("ESPLibrary.lua")()
+local ESPLibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/AlexR32/Roblox/main/BRM5/ESPLibrary.lua"))()
 
 if not getgenv().Config then
 getgenv().Config = {
