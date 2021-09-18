@@ -17,7 +17,7 @@ getgenv().Config = {
     -- FoV Circle
     CircleVisible = true,
     CircleTransparency = 1,
-    CircleColor = Color3.fromRGB(255,128,255),
+    CircleColor = Color3.fromRGB(255,128,64),
     CircleThickness = 1,
     CircleNumSides = 30,
     CircleFilled = false,
@@ -28,13 +28,13 @@ getgenv().Config = {
     TextVisible = true,
     HealthbarVisible = false,
     BoxVisible = true,
-    Color = Color3.fromRGB(255,128,255),
+    Color = Color3.fromRGB(255,128,64),
     Rainbow = false,
 
     -- Aimbot and Silent Aim
-    SilentAim = true,
-    Aimbot = false,
-    Sensitivity = 0.5,
+    SilentAim = false,
+    Aimbot = true,
+    Sensitivity = 0.1,
     FieldOfView = 100,
     AimHitbox = "Head"
 }
@@ -181,21 +181,21 @@ end)
 
 -- credits to jan for patterns
 local Dropdown3 = Section5:CreateDropdown("Image", {"Default","Hearts","Abstract","Hexagon","Circles","Lace With Flowers","Floral"}, function(Name)
-	if Name == "Default" then
-		Window:SetBackground("2151741365")
-	elseif Name == "Hearts" then
-		Window:SetBackground("6073763717")
-	elseif Name == "Abstract" then
-		Window:SetBackground("6073743871")
-	elseif Name == "Hexagon" then
-		Window:SetBackground("6073628839")
-	elseif Name == "Circles" then
-		Window:SetBackground("6071579801")
-	elseif Name == "Lace With Flowers" then
-		Window:SetBackground("6071575925")
-	elseif Name == "Floral" then
-		Window:SetBackground("5553946656")
-	end
+    if Name == "Default" then
+        Window:SetBackground("2151741365")
+    elseif Name == "Hearts" then
+        Window:SetBackground("6073763717")
+    elseif Name == "Abstract" then
+        Window:SetBackground("6073743871")
+    elseif Name == "Hexagon" then
+        Window:SetBackground("6073628839")
+    elseif Name == "Circles" then
+        Window:SetBackground("6071579801")
+    elseif Name == "Lace With Flowers" then
+        Window:SetBackground("6071575925")
+    elseif Name == "Floral" then
+        Window:SetBackground("5553946656")
+    end
 end, "Default")
 
 local Colorpicker4 = Section5:CreateColorpicker("Color", function(Color)
@@ -296,7 +296,7 @@ local function CreateESP(Model)
                         BoxOutline.Visible = Config.BoxVisible and Config.OutlineVisible
                         BoxOutline.Transparency = 1
                         BoxOutline.Color = Color3.fromRGB(0,0,0)
-                        BoxOutline.Thickness = 4
+                        BoxOutline.Thickness = 3
                         BoxOutline.Filled = false
 
                         BoxOutline.Size = Vector2.new(xSize,ySize)
@@ -305,7 +305,7 @@ local function CreateESP(Model)
                         Box.Visible = Config.BoxVisible
                         Box.Transparency = 1
                         Box.Color = Config.Color
-                        Box.Thickness = 2
+                        Box.Thickness = 1
                         Box.Filled = false
 
                         Box.Size = Vector2.new(xSize, ySize)
@@ -364,20 +364,24 @@ local function TeamCheck(Player)
 end
 
 local function GetTarget()
+    local ClosestPlayer = nil
+    local FarthestDistance = math.huge
     local Camera = Workspace.CurrentCamera
     for _, Player in pairs(PlayerService:GetPlayers()) do
         if Player ~= LocalPlayer and Player.Character and Player.Character:FindFirstChild(Config.AimHitbox) and TeamCheck(Player) then
             if Player.Character:FindFirstChildOfClass("Humanoid") and Player.Character:FindFirstChildOfClass("Humanoid").Health ~= 0 then
-                local Vector, OnScreen = Camera:WorldToViewportPoint(Player.Character:FindFirstChild(Config.AimHitbox).Position)
+                local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(Player.Character:FindFirstChild(Config.AimHitbox).Position)
                 if OnScreen then
-                    local VectorMagnitude = (Vector2.new(Vector.X, Vector.Y) - UserInputService:GetMouseLocation()).Magnitude
-                    if VectorMagnitude <= Config.FieldOfView then
-                        return Player.Character:FindFirstChild(Config.AimHitbox)
+                    local MouseDistance = (Vector2.new(ScreenPosition.X, ScreenPosition.Y) - UserInputService:GetMouseLocation()).Magnitude
+                    if MouseDistance < FarthestDistance and MouseDistance <= Config.FieldOfView then
+                        FarthestDistance = MouseDistance
+                        ClosestPlayer = Player.Character:FindFirstChild(Config.AimHitbox)
                     end
                 end
             end
         end
     end
+    return ClosestPlayer
 end
 
 local function GetTargetDummyDebug()
@@ -400,7 +404,7 @@ end
 local function returnHit(hit, args)
     local Camera = Workspace.CurrentCamera
     local CameraPosition = Camera.CFrame.Position
-    if table.find(args[2],LocalPlayer.Character,1) and table.find(args[2],Workspace.Drops,4) and table.find(args[2],Workspace.Projectiles,5) then
+    if table.find(args[2],LocalPlayer,1) and table.find(args[2],Workspace.Drops,4) and table.find(args[2],Workspace.Projectiles,5) then
         args[1] = Ray.new(CameraPosition, hit.Position - CameraPosition)
         return
     end
