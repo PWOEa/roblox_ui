@@ -1,5 +1,5 @@
 local Network = loadstring(game:HttpGet("https://raw.githubusercontent.com/AlexR32/Roblox/main/BRM5/Network.lua"))() -- by Averias https://v3rmillion.net/showthread.php?tid=1096231 <3
-local notify = loadstring(game:HttpGet("https://raw.githubusercontent.com/AlexR32/Roblox/main/TWSM.lua"))()
+local notify = loadstring(game:HttpGet("https://raw.githubusercontent.com/AlexR32/Roblox/main/BRM5/TypeWriter.lua"))()
 
 local UserInputService = game:GetService("UserInputService")
 local HttpService = game:GetService("HttpService")
