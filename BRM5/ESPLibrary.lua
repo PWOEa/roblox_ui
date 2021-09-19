@@ -5,6 +5,7 @@ local LocalPlayer = PlayerService.LocalPlayer
 local ESPLibrary = {}
 local PlayerTable = {}
 local NPCTable = {}
+local NPCFolder = Workspace.Custom:FindFirstChild("-1") or Workspace.Custom:FindFirstChild("1")
 
 local function CalculateBox(Model)
 	local CFrame, Size = Model:GetBoundingBox()
@@ -216,8 +217,8 @@ RunService.RenderStepped:Connect(function()
 
         ESP.Info.Main.Visible = (OnScreen and Config.InfoVisible) or false
     end
-    if Config.NPCFolder then
-        for Index, NPC in pairs(Config.NPCFolder:GetChildren()) do
+    if NPCFolder then
+        for Index, NPC in pairs(NPCFolder:GetChildren()) do
             local ESP = NPCTable[NPC]
             if not ESP then continue end
 
