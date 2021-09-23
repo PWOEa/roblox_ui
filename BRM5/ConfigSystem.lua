@@ -14,7 +14,7 @@ local function TableToColor3(Table)
 	return Color3.fromRGB(Table["R"] * 255,Table["G"] * 255,Table["B"] * 255)
 end
 
-function shallowcopy(orig) -- I hate this fucking function very much
+local function shallowcopy(orig)
 	local orig_type = type(orig)
 	local copy
 	if orig_type == 'table' then
@@ -28,22 +28,34 @@ function shallowcopy(orig) -- I hate this fucking function very much
 	return copy
 end
 
+local function Compare(Table,Default)
+	local TableCopy = {}
+	for Index,Value in pairs(Default) do
+		TableCopy[Index] = Index
+	end
+	for Index,Value in pairs(Table) do
+		if Index ~= TableCopy[Index] then
+			Table[Index] = nil
+		end
+	end
+end
 
 function ConfigSystem.WriteJSON(Table)
     local TableCopy = shallowcopy(Table)
-	for Index,Element in pairs(TableCopy) do
-		if typeof(Element) == "Color3" then
-			TableCopy[Index] = Color3ToTable(Element)
+	for Index,Value in pairs(TableCopy) do
+		if typeof(Value) == "Color3" then
+			TableCopy[Index] = Color3ToTable(Value)
 		end
 	end
 	return HttpService:JSONEncode(TableCopy)
 end
 
-function ConfigSystem.ReadJSON(JSON)
+function ConfigSystem.ReadJSON(JSON,Default)
 	local Table = HttpService:JSONDecode(JSON)
-	for Index,Element in pairs(Table) do
-		if typeof(Element) == "table" and (Element["R"] and Element["G"] and Element["B"]) then
-			Table[Index] = TableToColor3(Element)
+	Compare(Table,Default)
+	for Index,Value in pairs(Table) do
+		if typeof(Value) == "table" and (Value["R"] and Value["G"] and Value["B"]) then
+			Table[Index] = TableToColor3(Value)
 		end
 	end
 	return Table
