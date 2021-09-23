@@ -1,14 +1,50 @@
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
+local Lighting = game:GetService("Lighting")
 
 local PlayerService = game:GetService("Players")
 local LocalPlayer = PlayerService.LocalPlayer
 
 local NPCFolder = Workspace.Custom:FindFirstChild("-1") or Workspace.Custom:FindFirstChild("1")
 local ESPLibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/AlexR32/Roblox/main/BRM5/ESPLibrary.lua"))()
+local ConfigSystem = loadstring(game:HttpGet("https://raw.githubusercontent.com/AlexR32/Roblox/main/BRM5/ConfigSystem.lua"))()
 
-if not getgenv().Config then
+local function SaveConfig()
+    if isfile("Alex's Scripts/BRM5_SilentAim.json") then
+        writefile("Alex's Scripts/BRM5_SilentAim.json", ConfigSystem.WriteJSON(Config))
+    else
+        makefolder("Alex's Scripts")
+        writefile("Alex's Scripts/BRM5_SilentAim.json", ConfigSystem.WriteJSON(Config))
+    end
+end
+local function LoadConfig()
+    if isfile("Alex's Scripts/BRM5_SilentAim.json") then
+        getgenv().Config = ConfigSystem.ReadJSON(readfile("Alex's Scripts/BRM5_SilentAim.json"),Config)
+    else
+        makefolder("Alex's Scripts")
+        writefile("Alex's Scripts/BRM5_SilentAim.json", ConfigSystem.WriteJSON(Config))
+    end
+end
+local function JoinDiscordServer(Server)
+    local HttpService = game:GetService("HttpService")
+    local response = syn.request({
+        ["Url"] = "http://localhost:6463/rpc?v=1",
+        ["Method"] = "POST",
+        ["Headers"] = {
+            ["Content-Type"] = "application/json",
+            ["Origin"] = "https://discord.com"
+        },
+        ["Body"] = HttpService:JSONEncode({
+            ["cmd"] = "INVITE_BROWSER",
+            ["nonce"] = string.lower(HttpService:GenerateGUID(false)),
+            ["args"] = {
+                ["code"] = tostring(Server)
+            }
+        })
+    })
+end
+
 getgenv().Config = {
     -- Circle
     CircleVisible = true,
@@ -19,7 +55,6 @@ getgenv().Config = {
     CircleFilled = false,
 
     -- ESP
-    NPCFolder = NPCFolder,
     AllyColor = Color3.fromRGB(0,255,0),
     EnemyColor = Color3.fromRGB(255,0,0),
     UseTeamColor = true,
@@ -39,11 +74,15 @@ getgenv().Config = {
     TargetMode = "NPC",
     AimHitbox = "Head",
 
+    -- Other
+    Fullbright = false,
     NoRecoil = false,
-    EnableSpeed = false,
-    Speed = 100
+    Speedhack = false,
+    SpeedhackValue = 100,
+    RapidFire = false,
+    RapidFireValue = 1000,
 }
-end
+LoadConfig()
 
 local UIConfig = {
     WindowName = "Blackhawk Rescue Mission 5",
@@ -55,14 +94,14 @@ local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/AlexR
 local Window = Library:CreateWindow(UIConfig, game:GetService("CoreGui"))
 
 local MainTab = Window:CreateTab("Main")
-local UITab = Window:CreateTab("UI Settings")
+local OtherTab = Window:CreateTab("Other")
 
 local AimbotSection = MainTab:CreateSection("Aimbot")
 local CircleSection = MainTab:CreateSection("Circle")
 local ESPSection = MainTab:CreateSection("ESP")
 local OtherSection = MainTab:CreateSection("Other")
-local MenuSection = UITab:CreateSection("Menu")
-local BackgroundSection = UITab:CreateSection("Background")
+local MenuSection = OtherTab:CreateSection("Menu")
+local BackgroundSection = OtherTab:CreateSection("Background")
 
 local SilentAimToggle = AimbotSection:CreateToggle("Silent Aim", nil, function(State)
     Config.SilentAim = State
@@ -170,20 +209,35 @@ local OutlineToggle = ESPSection:CreateToggle("Outline Visible", nil, function(S
 end)
 OutlineToggle:SetState(Config.OutlineVisible)
 
-local SpeedToggle = OtherSection:CreateToggle("Enabled Speedhack", nil, function(State)
-    Config.EnableSpeed = State
+local FullbrightToggle = OtherSection:CreateToggle("Enable Fullbright", nil, function(State)
+    Config.Fullbright = State
 end)
-SpeedToggle:SetState(Config.EnableSpeed)
+FullbrightToggle:SetState(Config.Fullbright)
 
-local NoRecoilToggle = OtherSection:CreateToggle("No Recoil", nil, function(State)
+local NoRecoilToggle = OtherSection:CreateToggle("Enable No Recoil", nil, function(State)
     Config.NoRecoil = State
 end)
 NoRecoilToggle:SetState(Config.NoRecoil)
 
-local SpeedSlider = OtherSection:CreateSlider("Speedhack Value", 0,1000,nil,true, function(Value)
-    Config.Speed = Value
+local SpeedhackToggle = OtherSection:CreateToggle("Enable Speedhack", nil, function(State)
+    Config.Speedhack = State
 end)
-SpeedSlider:SetValue(Config.Speed)
+SpeedhackToggle:SetState(Config.Speedhack)
+
+local SpeedhackSlider = OtherSection:CreateSlider("Speedhack Value", 0,1000,nil,true, function(Value)
+    Config.SpeedhackValue = Value
+end)
+SpeedhackSlider:SetValue(Config.SpeedhackValue)
+
+local RapidFireToggle = OtherSection:CreateToggle("Enable RapidFire", nil, function(State)
+    Config.RapidFire = State
+end)
+RapidFireToggle:SetState(Config.RapidFire)
+
+local RapidFireSlider = OtherSection:CreateSlider("RapidFire Value", 0,5000,nil,true, function(Value)
+    Config.RapidFireValue = Value
+end)
+RapidFireSlider:SetValue(Config.RapidFireValue)
 
 
 local UIToggle = MenuSection:CreateToggle("UI Toggle", nil, function(State)
@@ -198,6 +252,11 @@ local UIColor = MenuSection:CreateColorpicker("UI Color", function(Color)
     Window:ChangeColor(Color)
 end)
 UIColor:UpdateColor(UIConfig.Color)
+
+local DiscordButton = MenuSection:CreateButton("Join Discord Server", function()
+    JoinDiscordServer("JKywVqjV6m")
+end)
+DiscordButton:AddToolTip("Support and Changelog Server")
 
 -- credits to jan for patterns
 local PatternBackground = BackgroundSection:CreateDropdown("Image", {"Default","Hearts","Abstract","Hexagon","Circles","Lace With Flowers","Floral"}, function(Name)
@@ -311,27 +370,38 @@ end
 -- hooks
 local HumanoidClass = require(GetNilScript("HumanoidClass"))
 local humanoidOld = HumanoidClass.LateUpdate
-HumanoidClass.LateUpdate = function(arg, ...)
-    if Config.EnableSpeed then
-        arg._speed = Config.Speed
-        --arg.fly = 0
-        arg.fall = false
-        arg.Falling = false
+HumanoidClass.LateUpdate = function(...)
+    if Config.Speedhack then
+        local args = {...}
+        args[1]._speed = Config.SpeedhackValue
+        args[1].fall = false
+        args[1].Falling = false
     end
-    return humanoidOld(arg, ...)
+    return humanoidOld(...)
 end
 
 local CharacterCamera = require(GetNilScript("CharacterCamera"))
 local cameraOld = CharacterCamera.Update
-CharacterCamera.Update = function(arg, ...)
-    arg._shake = 0
+CharacterCamera.Update = function(...)
+    local args = {...}
+    args[1]._shake = 0
     if Config.NoRecoil then
-        arg._recoil = 0
+        args[1]._recoil = 0
     end
-    if Config.EnableSpeed then
-        arg._bob = 0
+    if Config.Speedhack then
+        args[1]._bob = 0
     end
-    return cameraOld(arg, ...)
+    return cameraOld(...)
+end
+
+local FirearmInventory = require(GetNilScript("FirearmInventory"))
+local firearmOld = FirearmInventory.Discharge
+FirearmInventory.Discharge = function(...)
+    local args = {...}
+    if Config.RapidFire then
+        args[1]._data.stats.rpm = Config.RapidFireValue
+    end
+    return firearmOld(...)
 end
 
 local namecall
@@ -361,6 +431,11 @@ RunService.Heartbeat:Connect(function()
     Circle.Filled = Config.CircleFilled
     Circle.Position = UserInputService:GetMouseLocation()
 
+    if Config.Fullbright then
+        Lighting.ClockTime = 12
+        Lighting.Brightness = 3
+    end
+
     if Config.SilentAim then
         target = GetTarget()
     else
@@ -380,18 +455,18 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
-if Config.NPCFolder then
-    for Index, NPC in pairs(Config.NPCFolder:GetChildren()) do
+if NPCFolder then
+    for Index, NPC in pairs(NPCFolder:GetChildren()) do
         if NPC:WaitForChild("Humanoid",0.1) and not NPC.Humanoid:FindFirstChild("Free") then
             ESPLibrary.AddNPC(NPC)
         end
     end
-    Config.NPCFolder.ChildAdded:Connect(function(NPC)
+    NPCFolder.ChildAdded:Connect(function(NPC)
         if NPC:WaitForChild("Humanoid",0.1) and not NPC.Humanoid:FindFirstChild("Free") then
             ESPLibrary.AddNPC(NPC)
         end
     end)
-    Config.NPCFolder.ChildRemoved:Connect(function(NPC)
+    NPCFolder.ChildRemoved:Connect(function(NPC)
         ESPLibrary.RemoveNPC(NPC)
     end)
 end
@@ -404,5 +479,6 @@ PlayerService.PlayerAdded:Connect(function(Player)
     ESPLibrary.AddPlayer(Player)
 end)
 PlayerService.PlayerRemoving:Connect(function(Player)
+    if Player == LocalPlayer then SaveConfig() end
     ESPLibrary.RemovePlayer(Player)
 end)
