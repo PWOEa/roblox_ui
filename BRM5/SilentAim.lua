@@ -258,6 +258,8 @@ local DiscordButton = MenuSection:CreateButton("Join Discord Server", function()
 end)
 DiscordButton:AddToolTip("Support and Changelog Server")
 
+MenuSection:CreateButton("Unlock CBTS Achievement", function() Network:FireServer("CBTS") end)
+
 -- credits to jan for patterns
 local PatternBackground = BackgroundSection:CreateDropdown("Image", {"Default","Hearts","Abstract","Hexagon","Circles","Lace With Flowers","Floral"}, function(Name)
     if Name == "Default" then
