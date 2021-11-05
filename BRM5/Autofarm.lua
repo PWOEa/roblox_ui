@@ -30,6 +30,8 @@ getgenv().AutofarmConfig = {
     Align = CFrame.new(0,-5,0) -- aling your character to npc
 }
 
+--[[
+-- Probably patched
 local function GetNilScript(Name)
     for _,Instance in pairs(getnilinstances()) do
         if Instance.Name == Name then
@@ -37,14 +39,13 @@ local function GetNilScript(Name)
         end
     end
 end
---[[
 local function notify(message, color)
     require(GetNilScript("InterfaceHandler")).ScreenMessage(nil, message, color)
 end
-]]
 local function fadeGameplay(state)
     require(GetNilScript("InterfaceHandler")).FadeGameplay(nil, state)
 end
+]]
 
 local function isAlive() -- resets character when you down
     if LocalPlayer.Character then
