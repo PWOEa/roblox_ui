@@ -361,18 +361,17 @@ function GetTarget()
     end
     return ClosestPlayer
 end
---[[
-    PATCHED PATCHED PATCHED PATCHED PATCHED PATCHED PATCHED PATCHED 
-local function GetNilScript(Name)
+
+local function Require(Name)
     for _,Instance in pairs(getnilinstances()) do
         if Instance.Name == Name then
-            return Instance
-        end 
+            return require(Instance)
+        end
     end
 end
 
 -- hooks
-local HumanoidClass = require(GetNilScript("HumanoidClass"))
+local HumanoidClass = Require("HumanoidClass")
 local humanoidOld = HumanoidClass.LateUpdate
 HumanoidClass.LateUpdate = function(...)
     if Config.Speedhack then
@@ -384,7 +383,7 @@ HumanoidClass.LateUpdate = function(...)
     return humanoidOld(...)
 end
 
-local CharacterCamera = require(GetNilScript("CharacterCamera"))
+local CharacterCamera = Require("CharacterCamera")
 local cameraOld = CharacterCamera.Update
 CharacterCamera.Update = function(...)
     local args = {...}
@@ -398,7 +397,7 @@ CharacterCamera.Update = function(...)
     return cameraOld(...)
 end
 
-local FirearmInventory = require(GetNilScript("FirearmInventory"))
+local FirearmInventory = Require("FirearmInventory")
 local firearmOld = FirearmInventory.Discharge
 FirearmInventory.Discharge = function(...)
     local args = {...}
@@ -407,7 +406,7 @@ FirearmInventory.Discharge = function(...)
     end
     return firearmOld(...)
 end
-]]
+
 local namecall
 namecall = hookmetamethod(game, "__namecall", function(self, ...)
     local args = {...}
