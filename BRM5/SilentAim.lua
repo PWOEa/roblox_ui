@@ -361,7 +361,8 @@ function GetTarget()
     end
     return ClosestPlayer
 end
-
+--[[
+    PATCHED PATCHED PATCHED PATCHED PATCHED PATCHED PATCHED PATCHED 
 local function GetNilScript(Name)
     for _,Instance in pairs(getnilinstances()) do
         if Instance.Name == Name then
@@ -406,7 +407,7 @@ FirearmInventory.Discharge = function(...)
     end
     return firearmOld(...)
 end
-
+]]
 local namecall
 namecall = hookmetamethod(game, "__namecall", function(self, ...)
     local args = {...}
