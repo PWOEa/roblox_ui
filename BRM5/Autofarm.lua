@@ -30,22 +30,20 @@ getgenv().AutofarmConfig = {
     Align = CFrame.new(0,-5,0) -- aling your character to npc
 }
 
---[[
--- Probably patched
-local function GetNilScript(Name)
+
+local function Require(Name)
     for _,Instance in pairs(getnilinstances()) do
         if Instance.Name == Name then
-            return Instance
+            return require(Instance)
         end
     end
 end
 local function notify(message, color)
-    require(GetNilScript("InterfaceHandler")).ScreenMessage(nil, message, color)
+    Require("InterfaceHandler").ScreenMessage(nil, message, color)
 end
 local function fadeGameplay(state)
-    require(GetNilScript("InterfaceHandler")).FadeGameplay(nil, state)
+    Require("InterfaceHandler").FadeGameplay(nil, state)
 end
-]]
 
 local function isAlive() -- resets character when you down
     if LocalPlayer.Character then
@@ -60,7 +58,7 @@ local function checkMenu() -- basic menu check and deploy button fire
     if Menu.Visible then
         local Deploy = Menu["#screens"].template["#tab"]["#deploy"]
         getconnections(Deploy.MouseButton1Click)[1]:Fire()
-        fadeGameplay(true) -- fix
+        fadeGameplay(true)
     end
 end
 
