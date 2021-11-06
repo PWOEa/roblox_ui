@@ -38,7 +38,7 @@ local function Require(Name)
         end
     end
 end
-local function notify(message, color)
+local function notifyOld(message, color)
     Require("InterfaceHandler").ScreenMessage(nil, message, color)
 end
 local function fadeGameplay(state)
@@ -83,7 +83,7 @@ local function checkGun(auto) -- gun check and equip gun mechanism
     else
         if auto then
             Network:InvokeServer("equipTool", 0) -- unequip already hold on gun
-            Network:InvokeServer("equipTool", 1) -- equip your main gun if its not
+            Network:InvokeServer("equipTool", 1) -- equip your main gun
         end
         return false
     end
@@ -158,8 +158,9 @@ end)
 local Wait = 0
 local WaitMax = 5
 RunService.Heartbeat:Connect(function(Delta)
-    Wait += Delta
+    Wait = Wait + Delta
     if Wait >= WaitMax then
+        Wait = 0
         if AutofarmConfig.Enabled then
             checkMenu()
             checkGun(true)
@@ -170,7 +171,6 @@ RunService.Heartbeat:Connect(function(Delta)
                 afkPlace = 1
             end
         end
-        Wait = 0
     end
 end)
 
