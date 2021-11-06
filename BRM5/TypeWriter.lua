@@ -10,7 +10,7 @@ return function(Text, Wait)
         Screen = Folder.TypeWriter:Clone()
         Screen.Parent = CoreGui
     end
-    print(Screen.Container)
+
     local Message = Folder.Message:Clone()
     Message.Parent = Screen.Container
     Message.Text = Text
