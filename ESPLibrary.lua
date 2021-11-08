@@ -37,10 +37,9 @@ local function CalculateBox(Model)
 	
 	local WorldPosition, OnScreen = Camera:WorldToViewportPoint(CFrame.Position)
 	local ScreenSize = Vector2.new((CornerTable.TopLeft - CornerTable.TopRight).Magnitude, (CornerTable.TopLeft - CornerTable.BottomLeft).Magnitude)
-	local ScreenPosition = Vector2.new(WorldPosition.X - Size.X / 2, WorldPosition.Y - Size.Y / 2)
-
+    local ScreenPosition = Vector2.new(WorldPosition.X, WorldPosition.Y)
 	return {
-		WorldPosition = WorldPosition,
+        WorldPosition = WorldPosition,
 		ScreenPosition = ScreenPosition, 
 		ScreenSize = ScreenSize,
 		OnScreen = OnScreen
@@ -85,6 +84,7 @@ end
 function ESPLibrary.Remove(Model)
     if ESPTable[Model] then
         for Index, Drawing in pairs(ESPTable[Model].Drawing) do
+            print(Drawing)
             if Drawing.Main and Drawing.Outline then
                 Drawing.Main:Remove()
                 Drawing.Outline:Remove()
