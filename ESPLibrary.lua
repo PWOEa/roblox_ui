@@ -18,7 +18,6 @@ end
 local function AddDrawing(Type, Properties)
     local Drawing = Drawing.new(Type)
     for Index, Property in pairs(Properties) do
-        print(Index,Property)
         Drawing[Index] = Property
     end
     return Drawing
