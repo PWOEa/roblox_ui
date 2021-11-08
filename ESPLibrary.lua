@@ -37,7 +37,7 @@ local function CalculateBox(Model)
 	
 	local WorldPosition, OnScreen = Camera:WorldToViewportPoint(CFrame.Position)
 	local ScreenSize = Vector2.new((CornerTable.TopLeft - CornerTable.TopRight).Magnitude, (CornerTable.TopLeft - CornerTable.BottomLeft).Magnitude)
-    local ScreenPosition = Vector2.new(WorldPosition.X, WorldPosition.Y)
+    local ScreenPosition = Vector2.new(WorldPosition.X - ScreenSize.X / 2, WorldPosition.Y - ScreenSize.Y / 2)
 	return {
         WorldPosition = WorldPosition,
 		ScreenPosition = ScreenPosition, 
