@@ -18,6 +18,7 @@ end
 local function AddDrawing(Type, Properties)
     local Drawing = Drawing.new(Type)
     for Index, Property in pairs(Properties) do
+        print(Index,Property)
         Drawing[Index] = Property
     end
     return Drawing
@@ -85,9 +86,11 @@ end
 function ESPLibrary.Remove(Model)
     if ESPTable[Model] then
         for Index, Drawing in pairs(ESPTable[Model].Drawing) do
-            Drawing.Box.Main:Remove()
-            Drawing.Box.Outline:Remove()
-            Drawing.Text:Remove()
+            if Drawing.Main and Drawing.Outline then
+                Drawing.Main:Remove()
+                Drawing.Outline:Remove()
+            end
+            Drawing:Remove()
         end
         ESPTable[Model] = nil
     end
