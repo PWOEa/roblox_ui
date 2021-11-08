@@ -84,12 +84,13 @@ end
 function ESPLibrary.Remove(Model)
     if ESPTable[Model] then
         for Index, Drawing in pairs(ESPTable[Model].Drawing) do
-            print(Drawing)
-            if Drawing.Main and Drawing.Outline then
-                Drawing.Main:Remove()
-                Drawing.Outline:Remove()
+            if Drawing.Remove then
+                Drawing:Remove()
+            else
+                for Index2, Drawing2 in pairs(Drawing) do
+                    Drawing2:Remove()
+                end
             end
-            Drawing:Remove()
         end
         ESPTable[Model] = nil
     end
